@@ -1,69 +1,145 @@
-# Welcome to your Lovable project
+ Chat Supplier Explorer Application
 
-## Project info
+A real-time chat application built with React, TypeScript, and Supabase backend. This application allows users to interact with a chat interface to explore supplier and product information.
 
-**URL**: https://lovable.dev/projects/a07e767d-48e9-49c1-b709-62699a4f06bf
+## Features
 
-## How can I edit this code?
+- Real-time chat interface
+- Product and supplier information display
+- Recent queries history
+- Responsive design for mobile and desktop
+- Authentication system
+- Message persistence using Supabase
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+### Frontend
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui components
+- Lucide React icons
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a07e767d-48e9-49c1-b709-62699a4f06bf) and start prompting.
+### Backend
+- Supabase (Database & Authentication)
+- PostgreSQL
+- Row Level Security (RLS)
 
-Changes made via Lovable will be committed automatically to this repo.
+## Prerequisites
 
-**Use your preferred IDE**
+Before you begin, ensure you have the following installed:
+- Node.js (v16 or higher)
+- npm (Node Package Manager)
+- Git
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Installation & Setup
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Frontend Setup
 
-Follow these steps:
+1. Clone the repository:
+```bash
+git clone <your-repository-url>
+cd chat-supplier-explorer
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Install dependencies:
+```bash
+npm install
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. Create a `.env` file in the root directory and add your Supabase credentials:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4. Start the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Backend Setup (Supabase)
 
-**Use GitHub Codespaces**
+1. Create a new Supabase project at [https://supabase.com](https://supabase.com)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+2. Set up the messages table in Supabase:
+```sql
+CREATE TABLE messages (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  content TEXT NOT NULL,
+  is_bot BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+  type TEXT DEFAULT 'text',
+  data JSONB,
+  user_id UUID REFERENCES auth.users(id)
+);
 
-## What technologies are used for this project?
+-- Enable Row Level Security
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 
-This project is built with .
+-- Create policy for authenticated users
+CREATE POLICY "Users can insert their own messages"
+ON messages FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+CREATE POLICY "Users can view their own messages"
+ON messages FOR SELECT
+TO authenticated
+USING (auth.uid() = user_id);
+```
 
-## How can I deploy this project?
+## Building for Production
 
-Simply open [Lovable](https://lovable.dev/projects/a07e767d-48e9-49c1-b709-62699a4f06bf) and click on Share -> Publish.
+To create a production build:
 
-## I want to use a custom domain - is that possible?
+```bash
+npm run build
+```
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+The build artifacts will be stored in the `dist/` directory.
+
+## Project Structure
+
+```
+├── src/
+│   ├── components/        # React components
+│   ├── hooks/            # Custom React hooks
+│   ├── types/            # TypeScript type definitions
+│   ├── integrations/     # External service integrations
+│   └── lib/              # Utility functions
+├── public/               # Static assets
+└── backend/             # Backend configuration
+```
+
+## Key Components
+
+- `ChatInterface.tsx`: Main chat interface component
+- `ChatMessage.tsx`: Individual message component
+- `RecentQueries.tsx`: Recent queries sidebar component
+
+## Authentication
+
+The application uses Supabase Authentication. Users need to be authenticated to:
+- Send messages
+- View message history
+- Access protected routes
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, please open an issue in the repository or contact the development team.
