@@ -1,140 +1,231 @@
- Chat Supplier Explorer Application
+# AI-Powered Chatbot for Supplier and Product Information
 
-A real-time chat application built with React, TypeScript, and Supabase backend. This application allows users to interact with a chat interface to explore supplier and product information.
+A sophisticated chatbot application that enables users to query product and supplier information using natural language processing. Built with React frontend, Python backend using LangGraph, and PostgreSQL database.
 
 ## Features
 
-- Real-time chat interface
-- Product and supplier information display
+### Frontend
+- Real-time chat interface with natural language processing
+- Responsive design using Tailwind CSS
 - Recent queries history
-- Responsive design for mobile and desktop
-- Authentication system
-- Message persistence using Supabase
+- Structured display of product and supplier information
+- Error handling and loading states
+
+### Backend
+- LangGraph-powered chatbot for intelligent responses
+- Integration with open-source LLM for text summarization
+- PostgreSQL database for data persistence
+- FastAPI server for efficient API handling
+
+### Database
+- Structured schema for products and suppliers
+- Efficient querying system
+- Row Level Security (RLS) implementation
 
 ## Tech Stack
 
 ### Frontend
 - React 18
 - TypeScript
-- Vite
 - Tailwind CSS
 - shadcn/ui components
-- Lucide React icons
+- Axios for API calls
+- Context API for state management
 
 ### Backend
-- Supabase (Database & Authentication)
+- Python 3.9+
+- FastAPI
+- LangGraph
+- Open-source LLM (Hugging Face models)
 - PostgreSQL
-- Row Level Security (RLS)
+- SQLAlchemy ORM
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
+Before starting, ensure you have:
 - Node.js (v16 or higher)
-- npm (Node Package Manager)
+- Python 3.9+
+- PostgreSQL 13+
 - Git
 
-## Installation & Setup
+## Installation
 
 ### Frontend Setup
 
 1. Clone the repository:
 ```bash
-git clone <your-repository-url>
-cd chat-supplier-explorer
+git clone <repository-url>
+cd chatbot-supplier-explorer
 ```
 
-2. Install dependencies:
+2. Install frontend dependencies:
 ```bash
+cd frontend
 npm install
 ```
 
-3. Create a `.env` file in the root directory and add your Supabase credentials:
+3. Create `.env` file in frontend directory:
 ```env
+VITE_API_URL=http://localhost:8000
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-4. Start the development server:
+4. Start frontend development server:
 ```bash
 npm run dev
 ```
 
-The application will be available at `http://localhost:8080`
+### Backend Setup
 
-### Backend Setup (Supabase)
+1. Set up Python virtual environment:
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-1. Create a new Supabase project at [https://supabase.com](https://supabase.com)
+2. Install backend dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-2. Set up the messages table in Supabase:
+3. Create `.env` file in backend directory:
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/chatbot_db
+LLM_API_KEY=your_huggingface_api_key
+```
+
+4. Initialize database:
+```bash
+python scripts/init_db.py
+```
+
+5. Start backend server:
+```bash
+uvicorn main:app --reload
+```
+
+### Database Setup
+
+1. Create PostgreSQL database:
 ```sql
-CREATE TABLE messages (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  content TEXT NOT NULL,
-  is_bot BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
-  type TEXT DEFAULT 'text',
-  data JSONB,
-  user_id UUID REFERENCES auth.users(id)
+CREATE DATABASE chatbot_db;
+```
+
+2. Create tables:
+```sql
+-- Products Table
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    brand VARCHAR(100) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    description TEXT,
+    supplier_id INTEGER REFERENCES suppliers(id)
+);
+
+-- Suppliers Table
+CREATE TABLE suppliers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    contact_info TEXT NOT NULL,
+    product_categories TEXT[]
 );
 
 -- Enable Row Level Security
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-
--- Create policy for authenticated users
-CREATE POLICY "Users can insert their own messages"
-ON messages FOR INSERT
-TO authenticated
-WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can view their own messages"
-ON messages FOR SELECT
-TO authenticated
-USING (auth.uid() = user_id);
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
 ```
-
-## Building for Production
-
-To create a production build:
-
-```bash
-npm run build
-```
-
-The build artifacts will be stored in the `dist/` directory.
 
 ## Project Structure
 
 ```
-├── src/
-│   ├── components/        # React components
-│   ├── hooks/            # Custom React hooks
-│   ├── types/            # TypeScript type definitions
-│   ├── integrations/     # External service integrations
-│   └── lib/              # Utility functions
-├── public/               # Static assets
-└── backend/             # Backend configuration
+├── frontend/
+│   ├── src/
+│   │   ├── components/        # React components
+│   │   ├── context/          # Context API files
+│   │   ├── hooks/            # Custom React hooks
+│   │   ├── types/            # TypeScript definitions
+│   │   └── utils/            # Utility functions
+│   └── public/               # Static assets
+├── backend/
+│   ├── app/
+│   │   ├── api/             # API routes
+│   │   ├── models/          # Database models
+│   │   ├── services/        # Business logic
+│   │   └── utils/           # Utility functions
+│   ├── scripts/             # Database scripts
+│   └── tests/               # Backend tests
+└── docs/                    # Documentation
 ```
 
-## Key Components
+## API Endpoints
 
-- `ChatInterface.tsx`: Main chat interface component
-- `ChatMessage.tsx`: Individual message component
-- `RecentQueries.tsx`: Recent queries sidebar component
+### Products
+- GET /api/products - List all products
+- GET /api/products/{id} - Get product details
+- GET /api/products/brand/{brand} - Get products by brand
 
-## Authentication
+### Suppliers
+- GET /api/suppliers - List all suppliers
+- GET /api/suppliers/{id} - Get supplier details
+- GET /api/suppliers/category/{category} - Get suppliers by category
 
-The application uses Supabase Authentication. Users need to be authenticated to:
-- Send messages
-- View message history
-- Access protected routes
+### Chat
+- POST /api/chat - Send chat message
+  - Request body: { "message": "your question here" }
+  - Returns: { "response": "chatbot response", "data": [] }
+
+## Sample Queries
+
+The chatbot handles various types of queries:
+```
+"Show all products from Apple"
+"List suppliers providing laptops"
+"Get details for iPhone 13"
+"What's the price range for gaming laptops?"
+```
+
+## Development
+
+### Running Tests
+```bash
+# Frontend tests
+cd frontend
+npm test
+
+# Backend tests
+cd backend
+pytest
+```
+
+### Code Style
+- Frontend: ESLint + Prettier
+- Backend: Black + isort
+
+## Deployment
+
+### Frontend
+```bash
+cd frontend
+npm run build
+```
+
+### Backend
+```bash
+cd backend
+python scripts/prepare_deploy.py
+```
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
 
 ## License
 
@@ -142,4 +233,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Support
 
-For support, please open an issue in the repository or contact the development team.
+For support:
+- Open an issue in the repository
+- Contact: support@example.com
+
+## Acknowledgments
+
+- LangGraph community
+- Hugging Face team
+- Open-source LLM contributors
