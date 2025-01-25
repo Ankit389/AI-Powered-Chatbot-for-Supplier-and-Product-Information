@@ -54,7 +54,7 @@ Before starting, ensure you have:
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone <https://github.com/Ankit389/AI-Powered-Chatbot-for-Supplier-and-Product-Information.git>
 cd chatbot-supplier-explorer
 ```
 
@@ -67,8 +67,7 @@ npm install
 3. Create `.env` file in frontend directory:
 ```env
 VITE_API_URL=http://localhost:8000
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
 ```
 
 4. Start frontend development server:
